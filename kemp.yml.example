@@ -1,0 +1,31 @@
+# kemp.yml — Kemp LoadMaster targets for CertMate deploy hook
+#
+# Place at /etc/certmate/kemp.yml (or set KEMP_CONFIG=/path/to/kemp.yml)
+#
+# Each entry is one Kemp appliance. The hook will push the certificate
+# to every entry in this list whenever CertMate issues or renews a cert.
+#
+# Fields:
+#   url         (required) Base URL of the Kemp REST API
+#   cert_alias  (optional) Override the auto-derived alias (default: domain
+#               name with dots replaced by dashes, e.g. example-com)
+#   user        (optional) Inline username — prefer .env files instead
+#   pass        (optional) Inline password — prefer .env files instead
+#
+# Credentials are resolved in this order:
+#   1. Inline user/pass fields in this file (least preferred)
+#   2. Per-host .env file: /etc/certmate/kemp.d/<hostname>.env
+#      containing:  KEMP_USER=admin  KEMP_PASS=secret
+#
+# Directory for .env files can be overridden with KEMP_ENV_DIR env var.
+
+- url: https://kemp1.example.com
+  # cert_alias: my-custom-alias   # optional
+
+- url: https://kemp2.example.com
+  cert_alias: example-com-prod   # override auto-derived alias
+
+# Inline credentials (not recommended — use .env files instead)
+# - url: https://kemp3.example.com
+#   user: admin
+#   pass: secret
