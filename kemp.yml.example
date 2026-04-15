@@ -2,30 +2,60 @@
 #
 # Place at /etc/certmate/kemp.yml (or set KEMP_CONFIG=/path/to/kemp.yml)
 #
-# Each entry is one Kemp appliance. The hook will push the certificate
-# to every entry in this list whenever CertMate issues or renews a cert.
+# Each entry is one Kemp appliance. The hook matches CERTMATE_DOMAIN against
+# the domains list and only deploys to matching Kemps.
+#
+# Domain matching:
+#   - Exact:    "example.com"    matches only example.com
+#   - Wildcard: "*.example.com"  matches sub.example.com and example.com
+#   - Omit domains entirely to deploy to all Kemps regardless of domain
+#
+# VS binding:
+#   - vs_bind is only needed on first upload of a new cert alias
+#   - On renewal (replace=1), Kemp automatically updates all existing VS
+#     bindings using that alias — no rebind needed
+#   - VS handles: NickName (case-insensitive), IP:PORT, IP (assumes 443),
+#     or index:N for direct index reference
+#
+# Credentials are resolved from per-host .env files:
+#   /etc/certmate/kemp.d/<hostname>.env
+#   containing: KEMP_USER=admin  KEMP_PASS=secret
+#   or:         KEMP_APIKEY=your-api-key
 #
 # Fields:
 #   url         (required) Base URL of the Kemp REST API
-#   cert_alias  (optional) Override the auto-derived alias (default: domain
-#               name with dots replaced by dashes, e.g. example-com)
-#   user        (optional) Inline username — prefer .env files instead
-#   pass        (optional) Inline password — prefer .env files instead
-#
-# Credentials are resolved in this order:
-#   1. Inline user/pass fields in this file (least preferred)
-#   2. Per-host .env file: /etc/certmate/kemp.d/<hostname>.env
-#      containing:  KEMP_USER=admin  KEMP_PASS=secret
-#
-# Directory for .env files can be overridden with KEMP_ENV_DIR env var.
+#   domains     (optional) List of domain patterns to match — omit to match all
+#   vs_bind     (optional) Virtual Service handles to bind on first upload
+#   cert_alias  (optional) Override auto-derived alias (default: domain-to-dash)
+#   user        (optional) Inline username — prefer .env files
+#   pass        (optional) Inline password — prefer .env files
 
+# Example: one Kemp handling all primeoperator.com domains
 - url: https://kemp1.example.com
-  # cert_alias: my-custom-alias   # optional
+  domains:
+    - "*.primeoperator.com"
+    - "primeoperator.com"
+  vs_bind:
+    - "HTTPS-443"          # NickName
+    - "10.0.0.1:8443"      # IP:PORT
+    # - "index:3"          # Direct index reference
 
+# Example: second Kemp for a different tenant
 - url: https://kemp2.example.com
-  cert_alias: example-com-prod   # override auto-derived alias
+  domains:
+    - "*.otherclient.com"
+  vs_bind:
+    - "ClientVS"
 
-# Inline credentials (not recommended — use .env files instead)
+# Example: Kemp that receives all certs regardless of domain (no domains filter)
 # - url: https://kemp3.example.com
-#   user: admin
-#   pass: secret
+#   vs_bind:
+#     - "DefaultVS"
+
+# Example: with cert alias override
+# - url: https://kemp4.example.com
+#   domains:
+#     - "*.example.com"
+#   cert_alias: wildcard-example-com
+#   vs_bind:
+#     - "WildcardVS"
