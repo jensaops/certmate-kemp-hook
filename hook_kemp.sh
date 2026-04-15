@@ -59,7 +59,7 @@ fail() { printf '%s [%s] ERROR %s\n'  "$(date -Iseconds)" "$SCRIPT_NAME" "$*" >&
 log "Event=$CERTMATE_EVENT domain=$CERTMATE_DOMAIN"
 
 case "$CERTMATE_EVENT" in
-  issued|renewed) ;;
+  issued|renewed|created) ;;
   *)
     log "Event '$CERTMATE_EVENT' does not require Kemp deployment — exiting."
     exit 0
